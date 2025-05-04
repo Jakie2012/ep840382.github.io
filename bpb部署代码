@@ -5,19 +5,27 @@ on:
     branches:
       - main
   schedule:
-    # 每天凌晨1:00运行
-    - cron: "0 1 * * *"
+    - cron: "0 1 * * *"  # 每天凌晨1:00运行
 
 permissions:
   contents: write
 
 jobs:
   build:
+    name: Build and Obfuscate BPB
     runs-on: ubuntu-latest
 
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+
+      - name: 缓存 npm
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
 
       - name: 设置 Node.js 环境
         uses: actions/setup-node@v4
@@ -25,12 +33,10 @@ jobs:
           node-version: "latest"
 
       - name: 安装依赖项
-        run: |
-          npm install -g javascript-obfuscator
+        run: npm install -g javascript-obfuscator
 
       - name: 下载 BPB worker.js
-        run: |
-          wget -O origin.js https://raw.githubusercontent.com/bia-pain-bache/BPB-Worker-Panel/main/build/unobfuscated-worker.js
+        run: wget -O origin.js https://raw.githubusercontent.com/bia-pain-bache/BPB-Worker-Panel/main/build/unobfuscated-worker.js
 
       - name: 混淆 BPB worker.js
         run: |
